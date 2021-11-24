@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Update="NavigationForSortedDictionary.g.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>NavigationForSortedDictionary.g.cs</LastGenOutput>
+    </None>
+    <Compile Update="NavigationForSortedDictionary.g.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>NavigationForSortedDictionary.g.tt</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+
+</Project>

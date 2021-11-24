@@ -1,0 +1,38 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+#nullable enable
+
+namespace NavigationForSortedDictionary
+{
+    using System.Collections.Generic;
+
+    public static partial class Extention
+    {
+<# foreach(var M in new [] {
+"Ceiling",
+"Floor",
+"Higher",
+"Lower",
+ } ) { #>
+         public static TKey? <#= M #>Key<TKey, TValue>(this SortedDictionary<TKey, TValue> dictionary, TKey key)
+            where TKey : notnull
+         {
+             return <#= M #>Entry(dictionary, key) is { } and var entry ? entry.Key : throw new KeyNotFoundException();
+         }
+         public static TKey? <#= M #>KeyOrDefault<TKey, TValue>(this SortedDictionary<TKey, TValue> dictionary, TKey key, TKey? defaultValue = default)
+             where TKey : notnull
+         {
+             return <#= M #>Entry(dictionary, key) is { } and var entry ? entry.Key : defaultValue;
+         }
+         public static TKey? <#= M #>KeyOrNull<TKey, TValue>(this SortedDictionary<TKey, TValue> dictionary, TKey key)
+             where TKey : struct
+         {
+             return <#= M #>Entry(dictionary, key) is { } and var entry ? entry.Key : null;
+         }
+<# } #>
+    }
+}
