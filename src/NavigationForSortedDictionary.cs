@@ -4,6 +4,7 @@ namespace NavigationForSortedDictionary
     using System.Collections.Generic;
 #if SUPPORT_IMMUTABLE
     using System.Collections.Immutable;
+    using System;
 #endif
 
     public static partial class Extention
@@ -96,7 +97,11 @@ namespace NavigationForSortedDictionary
             where TDictionary : IReadOnlyDictionary<TKey, TValue>
             where TKey : notnull
         {
-            for (var e = dictionary.GetEnumerator(); e.MoveNext();)
+            if (comparer.Compare(from, to) > 0)
+                throw new ArgumentException();
+
+            using var e = dictionary.GetEnumerator();
+            for (; e.MoveNext();)
             {
                 if (comparer.Compare(e.Current.Key, from) >= 0)
                 {
