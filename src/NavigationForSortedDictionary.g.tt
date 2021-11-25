@@ -9,6 +9,9 @@
 namespace NavigationForSortedDictionary
 {
     using System.Collections.Generic;
+#if SUPPORT_IMMUTABLE
+    using System.Collections.Immutable;
+#endif
 
     public static partial class Extention
     {
@@ -18,21 +21,51 @@ namespace NavigationForSortedDictionary
 "Higher",
 "Lower",
  } ) { #>
-         public static TKey? <#= M #>Key<TKey, TValue>(this SortedDictionary<TKey, TValue> dictionary, TKey key)
+        public static KeyValuePair<TKey, TValue>? <#= M #>Entry<TKey, TValue>(this SortedDictionary<TKey, TValue> dictionary, TKey key)
             where TKey : notnull
-         {
-             return <#= M #>Entry(dictionary, key) is { } and var entry ? entry.Key : throw new KeyNotFoundException();
-         }
-         public static TKey? <#= M #>KeyOrDefault<TKey, TValue>(this SortedDictionary<TKey, TValue> dictionary, TKey key, TKey? defaultValue = default)
-             where TKey : notnull
-         {
-             return <#= M #>Entry(dictionary, key) is { } and var entry ? entry.Key : defaultValue;
-         }
-         public static TKey? <#= M #>KeyOrNull<TKey, TValue>(this SortedDictionary<TKey, TValue> dictionary, TKey key)
-             where TKey : struct
-         {
-             return <#= M #>Entry(dictionary, key) is { } and var entry ? entry.Key : null;
-         }
+        {
+            return <#= M #>EntryInternal<SortedDictionary<TKey, TValue>, TKey, TValue>(dictionary, dictionary.Comparer, key);
+        }
+#if SUPPORT_IMMUTABLE
+        public static KeyValuePair<TKey, TValue>? <#= M #>Entry<TKey, TValue>(this ImmutableSortedDictionary<TKey, TValue> dictionary, TKey key)
+            where TKey : notnull
+        {
+            return <#= M #>EntryInternal<ImmutableSortedDictionary<TKey, TValue>, TKey, TValue>(dictionary, dictionary.KeyComparer, key);
+        }
+#endif
+
+        public static TKey? <#= M #>Key<TKey, TValue>(this SortedDictionary<TKey, TValue> dictionary, TKey key)
+           where TKey : notnull
+        {
+            return <#= M #>Entry(dictionary, key) is { } and var entry ? entry.Key : throw new KeyNotFoundException();
+        }
+        public static TKey? <#= M #>KeyOrDefault<TKey, TValue>(this SortedDictionary<TKey, TValue> dictionary, TKey key, TKey? defaultValue = default)
+            where TKey : notnull
+        {
+            return <#= M #>Entry(dictionary, key) is { } and var entry ? entry.Key : defaultValue;
+        }
+        public static TKey? <#= M #>KeyOrNull<TKey, TValue>(this SortedDictionary<TKey, TValue> dictionary, TKey key)
+            where TKey : struct
+        {
+            return <#= M #>Entry(dictionary, key)?.Key;
+        }
+#if SUPPORT_IMMUTABLE
+        public static TKey? <#= M #>Key<TKey, TValue>(this ImmutableSortedDictionary<TKey, TValue> dictionary, TKey key)
+           where TKey : notnull
+        {
+            return <#= M #>Entry(dictionary, key) is { } and var entry ? entry.Key : throw new KeyNotFoundException();
+        }
+        public static TKey? <#= M #>KeyOrDefault<TKey, TValue>(this ImmutableSortedDictionary<TKey, TValue> dictionary, TKey key, TKey? defaultValue = default)
+            where TKey : notnull
+        {
+            return <#= M #>Entry(dictionary, key) is { } and var entry ? entry.Key : defaultValue;
+        }
+        public static TKey? <#= M #>KeyOrNull<TKey, TValue>(this ImmutableSortedDictionary<TKey, TValue> dictionary, TKey key)
+            where TKey : struct
+        {
+            return <#= M #>Entry(dictionary, key)?.Key;
+        }
+#endif
 <# } #>
     }
 }

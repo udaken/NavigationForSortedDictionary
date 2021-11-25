@@ -1,10 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
     <LangVersion>9.0</LangVersion>
     <Nullable>enable</Nullable>
+    <DefineConstants>$(DefineConstants)TRACE;SUPPORT_IMMUTABLE</DefineConstants>
+    <EnableNETAnalyzers>True</EnableNETAnalyzers>
+    <AnalysisLevel>latest</AnalysisLevel>
   </PropertyGroup>
+
+  <ItemGroup Condition="$(DefineConstants.Contains('SUPPORT_IMMUTABLE'))">
+    <PackageReference Include="System.Collections.Immutable" Version="6.0.0" />
+  </ItemGroup>
 
   <ItemGroup>
     <None Update="NavigationForSortedDictionary.g.tt">
@@ -16,6 +23,10 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>NavigationForSortedDictionary.g.tt</DependentUpon>
     </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
 
 

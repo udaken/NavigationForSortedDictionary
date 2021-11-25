@@ -1,17 +1,20 @@
-using System.Linq;
-using System.Collections.Generic;
-
 namespace NavigationForSortedDictionary
 {
+    using System.Linq;
+    using System.Collections.Generic;
+#if SUPPORT_IMMUTABLE
+    using System.Collections.Immutable;
+#endif
 
     public static partial class Extention
     {
-        public static KeyValuePair<TKey, TValue>? CeilingEntry<TKey, TValue>(this SortedDictionary<TKey, TValue> dictionary, TKey key)
+        private static KeyValuePair<TKey, TValue>? CeilingEntryInternal<TDictionary, TKey, TValue>(TDictionary dictionary, IComparer<TKey> comparer, TKey key)
+            where TDictionary : IReadOnlyDictionary<TKey, TValue>
             where TKey : notnull
         {
             foreach (var entry in dictionary)
             {
-                var result = dictionary.Comparer.Compare(entry.Key, key);
+                var result = comparer.Compare(entry.Key, key);
                 if (result >= 0)
                 {
                     return entry;
@@ -19,13 +22,15 @@ namespace NavigationForSortedDictionary
             }
             return null;
         }
-        public static KeyValuePair<TKey, TValue>? FloorEntry<TKey, TValue>(this SortedDictionary<TKey, TValue> dictionary, TKey key)
+
+        private static KeyValuePair<TKey, TValue>? FloorEntryInternal<TDictionary, TKey, TValue>(TDictionary dictionary, IComparer<TKey> comparer, TKey key)
+            where TDictionary : IReadOnlyDictionary<TKey, TValue>
             where TKey : notnull
         {
             var floor = default(KeyValuePair<TKey, TValue>?);
             foreach (var entry in dictionary)
             {
-                var result = dictionary.Comparer.Compare(entry.Key, key);
+                var result = comparer.Compare(entry.Key, key);
                 if (result < 0)
                 {
                     floor = entry;
@@ -41,28 +46,14 @@ namespace NavigationForSortedDictionary
             }
             return floor;
         }
-        public static IEnumerable<KeyValuePair<TKey, TValue>> Sub<TKey, TValue>(this SortedDictionary<TKey, TValue> dictionary, TKey from, TKey to)
+
+        public static KeyValuePair<TKey, TValue>? HigherEntryInternal<TDictionary, TKey, TValue>(TDictionary dictionary, IComparer<TKey> comparer, TKey key)
+            where TDictionary : IReadOnlyDictionary<TKey, TValue>
             where TKey : notnull
-        {
-            for (var e = dictionary.GetEnumerator(); e.MoveNext();)
-            {
-                if (dictionary.Comparer.Compare(e.Current.Key, from) >= 0)
-                {
-                    do
-                    {
-                        if (dictionary.Comparer.Compare(e.Current.Key, to) <= 0)
-                            yield return e.Current;
-                        else
-                            yield break;
-                    } while (e.MoveNext());
-                }
-            }
-        }
-        public static KeyValuePair<TKey, TValue>? HigherEntry<TKey, TValue>(this SortedDictionary<TKey, TValue> dictionary, TKey key) where TKey : notnull
         {
             foreach (var entry in dictionary)
             {
-                if (dictionary.Comparer.Compare(entry.Key, key) > 0)
+                if (comparer.Compare(entry.Key, key) > 0)
                 {
                     return entry;
                 }
@@ -70,12 +61,14 @@ namespace NavigationForSortedDictionary
             return null;
         }
 
-        public static KeyValuePair<TKey, TValue>? LowerEntry<TKey, TValue>(this SortedDictionary<TKey, TValue> dictionary, TKey key) where TKey : notnull
+        public static KeyValuePair<TKey, TValue>? LowerEntryInternal<TDictionary, TKey, TValue>(TDictionary dictionary, IComparer<TKey> comparer, TKey key)
+            where TDictionary : IReadOnlyDictionary<TKey, TValue>
+            where TKey : notnull
         {
             var lowest = default(KeyValuePair<TKey, TValue>?);
             foreach (var entry in dictionary)
             {
-                if (dictionary.Comparer.Compare(entry.Key, key) < 0)
+                if (comparer.Compare(entry.Key, key) < 0)
                 {
                     lowest = entry;
                 }
@@ -85,6 +78,37 @@ namespace NavigationForSortedDictionary
                 }
             }
             return lowest;
+        }
+
+        public static IEnumerable<KeyValuePair<TKey, TValue>> Sub<TKey, TValue>(this SortedDictionary<TKey, TValue> dictionary, TKey from, TKey to)
+            where TKey : notnull
+        {
+            return SubInternal<SortedDictionary<TKey, TValue>, TKey, TValue>(dictionary, dictionary.Comparer, from, to);
+        }
+#if SUPPORT_IMMUTABLE
+        public static IEnumerable<KeyValuePair<TKey, TValue>> Sub<TKey, TValue>(this ImmutableSortedDictionary<TKey, TValue> dictionary, TKey from, TKey to)
+            where TKey : notnull
+        {
+            return SubInternal<ImmutableSortedDictionary<TKey, TValue>, TKey, TValue>(dictionary, dictionary.KeyComparer, from, to);
+        }
+#endif
+        private static IEnumerable<KeyValuePair<TKey, TValue>> SubInternal<TDictionary, TKey, TValue>(TDictionary dictionary, IComparer<TKey> comparer, TKey from, TKey to)
+            where TDictionary : IReadOnlyDictionary<TKey, TValue>
+            where TKey : notnull
+        {
+            for (var e = dictionary.GetEnumerator(); e.MoveNext();)
+            {
+                if (comparer.Compare(e.Current.Key, from) >= 0)
+                {
+                    do
+                    {
+                        if (comparer.Compare(e.Current.Key, to) <= 0)
+                            yield return e.Current;
+                        else
+                            yield break;
+                    } while (e.MoveNext());
+                }
+            }
         }
 
         public static IEnumerable<KeyValuePair<TKey, TValue>> Head<TKey, TValue>(this SortedDictionary<TKey, TValue> dictionary, TKey key, bool inclusive = true)
@@ -107,6 +131,7 @@ namespace NavigationForSortedDictionary
                 }
             }
         }
+
         public static IEnumerable<KeyValuePair<TKey, TValue>> Tail<TKey, TValue>(this SortedDictionary<TKey, TValue> dictionary, TKey key, bool inclusive = true)
             where TKey : notnull
         {
